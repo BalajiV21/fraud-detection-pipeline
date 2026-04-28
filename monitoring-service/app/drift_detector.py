@@ -6,8 +6,7 @@ against the training reference data saved by training-service.
 import json
 import logging
 from datetime import datetime
-from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
 
 import pandas as pd
 

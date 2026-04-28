@@ -1,12 +1,10 @@
 """Train, compare, select best model. Logs to MLflow + saves artifacts."""
 import json
 import logging
-from pathlib import Path
 
 import joblib
 import mlflow
 import mlflow.sklearn
-import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression

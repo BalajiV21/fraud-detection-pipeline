@@ -22,7 +22,7 @@ def load_raw() -> pd.DataFrame:
         )
 
     log.info("Loading %s", txn_path)
-    #txn = pd.read_csv(txn_path)
+    # Use nrows for fast sampled training; remove the limit for full-data run.
     txn = pd.read_csv(txn_path, nrows=180000)
     log.info("Loading %s", id_path)
     ident = pd.read_csv(id_path)

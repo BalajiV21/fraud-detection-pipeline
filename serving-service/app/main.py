@@ -7,7 +7,7 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import Response
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from .config import THRESHOLD
 from .explainer import top_risk_factors

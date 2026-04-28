@@ -3,10 +3,10 @@ from pathlib import Path
 
 import matplotlib
 
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.metrics import (
+matplotlib.use("Agg")  # must be set before pyplot import
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
+from sklearn.metrics import (  # noqa: E402
     average_precision_score,
     confusion_matrix,
     f1_score,
