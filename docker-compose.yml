@@ -1,0 +1,97 @@
+volumes:
+  shared-data:
+  mlflow-data:
+
+networks:
+  fraud-net:
+    driver: bridge
+
+services:
+  mlflow:
+    build: ./mlflow-service
+    container_name: fraud-mlflow
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow-data:/mlflow
+    networks:
+      - fraud-net
+    command: >
+      sh -c "mkdir -p /mlflow/artifacts &&
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts"
+    restart: unless-stopped
+
+  training:
+    build: ./training-service
+    container_name: fraud-training
+    ports:
+      - "8001:8001"
+    volumes:
+      - shared-data:/models
+      - ./data:/data
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - mlflow
+    networks:
+      - fraud-net
+    restart: unless-stopped
+
+  serving:
+    build: ./serving-service
+    container_name: fraud-serving
+    ports:
+      - "8000:8000"
+    volumes:
+      - shared-data:/models
+    environment:
+      - MODEL_PATH=/models/best_model.joblib
+      - PIPELINE_PATH=/models/feature_pipeline.joblib
+      - THRESHOLD=0.5
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - fraud-net
+    restart: unless-stopped
+
+  monitoring:
+    build: ./monitoring-service
+    container_name: fraud-monitoring
+    ports:
+      - "8002:8002"
+    volumes:
+      - shared-data:/models:ro
+      - ./data:/data:ro
+      - ./reports:/reports
+    environment:
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-2}
+      - SERVING_URL=http://serving:8000
+      - PYTHONUNBUFFERED=1
+    networks:
+      - fraud-net
+    restart: unless-stopped
+
+  ui:
+    build: ./ui-service
+    container_name: fraud-ui
+    ports:
+      - "8501:8501"
+    environment:
+      - SERVING_URL=http://serving:8000
+      - MONITORING_URL=http://monitoring:8002
+      - MLFLOW_URL=http://mlflow:5000
+    depends_on:
+      - serving
+    networks:
+      - fraud-net
+    restart: unless-stopped
