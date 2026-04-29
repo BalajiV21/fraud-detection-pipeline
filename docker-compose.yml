@@ -86,6 +86,8 @@ services:
     container_name: fraud-ui
     ports:
       - "8501:8501"
+    volumes:
+      - shared-data:/models:ro
     environment:
       - SERVING_URL=http://serving:8000
       - MONITORING_URL=http://monitoring:8002
