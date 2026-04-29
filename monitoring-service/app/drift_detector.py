@@ -61,6 +61,16 @@ def check_drift() -> dict:
     ref = reference[common].copy()
     cur = current[common].copy()
 
+    # Drop columns that are entirely null in either side — Evidently raises
+    # "Empty column" when a feature has no values to compare.
+    ref = ref.dropna(axis=1, how="all")
+    cur = cur.dropna(axis=1, how="all")
+    common = [c for c in ref.columns if c in cur.columns]
+    if not common:
+        return {"status": "skipped", "reason": "no non-empty overlapping columns"}
+    ref = ref[common]
+    cur = cur[common]
+
     try:
         from evidently.metric_preset import DataDriftPreset
         from evidently.report import Report

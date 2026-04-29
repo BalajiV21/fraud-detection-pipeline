@@ -1,6 +1,7 @@
 volumes:
   shared-data:
   mlflow-data:
+  prediction-logs:
 
 networks:
   fraud-net:
@@ -36,6 +37,7 @@ services:
     environment:
       - MLFLOW_TRACKING_URI=http://mlflow:5000
       - PYTHONUNBUFFERED=1
+      - GIT_PYTHON_REFRESH=quiet
     depends_on:
       - mlflow
     networks:
@@ -48,10 +50,12 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - shared-data:/models
+      - shared-data:/models:ro
+      - prediction-logs:/logs
     environment:
       - MODEL_PATH=/models/best_model.joblib
       - PIPELINE_PATH=/models/feature_pipeline.joblib
+      - PREDICTION_LOG_PATH=/logs/prediction_log.jsonl
       - THRESHOLD=0.5
       - PYTHONUNBUFFERED=1
     healthcheck:
@@ -71,11 +75,13 @@ services:
       - "8002:8002"
     volumes:
       - shared-data:/models:ro
+      - prediction-logs:/logs:ro
       - ./data:/data:ro
       - ./reports:/reports
     environment:
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-2}
       - SERVING_URL=http://serving:8000
+      - PREDICTION_LOG_PATH=/logs/prediction_log.jsonl
       - PYTHONUNBUFFERED=1
     networks:
       - fraud-net
